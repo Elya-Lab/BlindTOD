@@ -107,8 +107,4 @@ if analyzeAtEnd
     standardExp = 1;
 
     data = triggerOnDeath2019Fun(analysisDir, convFiles, useKnownBounds, sexDiff, splitDays, hrBeforeDeath, dayLoaded, phaseShift, standardExp);
-    
-    %for i=1:length(convFiles)
-    %    data = triggerOnDeath2019Fun(analysisDir, convFiles(i), useKnownBounds, sexDiff, splitDays, hrBeforeDeath, dayLoaded, phaseShift);
-    %end
 end
