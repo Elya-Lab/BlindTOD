@@ -2,7 +2,7 @@ function plotTodHistogram(data,phaseShift)
 
     numCad = length(data.ZTlastMvmnts);
     if numCad >1
-        figure;
+        hFig = figure;
         hold on;
         
         plotTimes = mod(data.ZTlastMvmnts,24);
@@ -32,13 +32,6 @@ function plotTodHistogram(data,phaseShift)
         
         set(gcf,'PaperUnits','inches','PaperPosition',[0 0 10 8]);
         legend(strcat("N = ", num2str(numCad)),'Interpreter', 'none');
-        try
-            print(strcat(data.outDir,data.filePre,'_tod_histogram.png'),'-dpng');
-            print(strcat(data.outDir,data.filePre,'_tod_histogram.pdf'),'-dpdf');
-        catch
-            print(strcat('D:\Harvard\Manuscripts\2023-Summit paper\Figures\',data.filePre,'_tod_histogram.png'),'-dpng');
-            print(strcat('D:\Harvard\Manuscripts\2023-Summit paper\Figures\',data.filePre,'_tod_histogram.pdf'),'-dpdf');
-        end
-        close();
+
     end
 end

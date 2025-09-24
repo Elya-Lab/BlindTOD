@@ -15,7 +15,7 @@ function data = triggerOnDeath2019Fun(defaultDir,files,useKnownBounds,sexDiff, s
     data = []; % Initialize struct "data" (which will hold all data to analyze and plot)
 
     [data.timeStamp, data.dateStamp] = Stamps;
-    data.outDir = strcat(defaultDir,"Trigger On Death Output\",data.dateStamp,'\');
+    data.outDir = fullfile(defaultDir, "Trigger On Death Output", data.dateStamp, filesep);
     try
         mkdir(data.outDir);
     catch
@@ -50,7 +50,7 @@ function data = triggerOnDeath2019Fun(defaultDir,files,useKnownBounds,sexDiff, s
 
     data.params.doSexDiff = sexDiff;             % Look at sex differences
     data.params.doToDHist = 1;                   % Output histogram of times of last movement
-    data.params.splitTodByDay = splitDays;       % Output histograms of times of last death by day of death (option made for circaidan exps)
+    data.params.splitTodByDay = 1;       % Output histograms of times of last death by day of death (option made for circaidan exps)
     data.params.saveData = 1;                    % Option to save data struct or not
     data.params.fillNan = 1;                     % Replace NaN values in position matrix with last known position
     data.params.plotAllCads = 1;                 % Plot smoothed y position traces for each cadaver along with mean yposition
@@ -339,7 +339,7 @@ function data = triggerOnDeath2019Fun(defaultDir,files,useKnownBounds,sexDiff, s
                     if strcmp(survival{a}{roi,'Geno'},genoList(b)) && ismember(survival{a}{roi,'Sex'},sex)
                         
                         % Cadaver ROIs
-                        if survival{a}{roi,'Outcome'} == 1 && survival{a}{roi,'Last_mvmt'} >0
+                        if survival{a}{roi,'Outcome'} == 1 && survival{a}{roi,'Blind_TOD'} >0
 
                             % NOTE 2019-08-06
                             % I used to count time of death as last frame (by
@@ -351,8 +351,8 @@ function data = triggerOnDeath2019Fun(defaultDir,files,useKnownBounds,sexDiff, s
 
                             group{a}{roi} = 'Cadavers';  
 
-                            % overwrite lastMoves(roi) with value in "Last_mvmt" column
-                            lastMvmt{a}(roi) = round(single(survival{a}{roi,'Last_mvmt'})); 
+                            % overwrite lastMoves(roi) with value in "Blind_TOD" column
+                            lastMvmt{a}(roi) = round(single(survival{a}{roi,'Blind_TOD'})); 
 
                             % Check that lastMvmt value doesn't exceed max
                             % (last frame in dataset). If so, set to last
@@ -610,9 +610,6 @@ function data = triggerOnDeath2019Fun(defaultDir,files,useKnownBounds,sexDiff, s
                 set(gca,'FontSize',data.graph.labelFont);
                 xlim([0 24]);
                 ylim([0 0.5]);
-                set(gcf,'PaperUnits','inches','PaperPosition',[0 0 10 8]);
-                print(strcat(data.outDir,data.filePre,'_tod_histogram_byday.png'),'-dpng');
-                close();
             end
         end
     end
