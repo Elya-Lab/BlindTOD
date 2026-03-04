@@ -97,104 +97,97 @@ function data = triggerOnDeath2019Fun(defaultDir,files,useKnownBounds,sexDiff, s
     end
 
     %% Determine # of genotypes in experiment
-    % Each genotype will output its individual data struct
-    [cohortList,genoList] = deal("");
-    count = [];
-    [count.Alive,count.Cadavers,count.Uninfected,count.NI] = deal(0);
-    expFrames = NaN(1,length(files));
-    maxLength = 0;
+% Each genotype will output its individual data struct
+[cohortList,genoList] = deal("");
+count = [];
+[count.Alive,count.Cadavers,count.Uninfected,count.NI] = deal(0);
+expFrames = NaN(1,length(files));
+maxLength = 0;
 
-    % Go through each excel sheet and make a list of all unique genotypes
-    % and determine ZT0 for each file
-    for a=1:length(survivalList)
+% Go through each excel sheet and make a list of all unique genotypes
+% and determine ZT0 for each file
+for a=1:length(survivalList)
 
-        load(files(a));
-        
-        % Automatically determining whether run on EDT (daylight savings) or EST (standard)
-        expRunDate = datenum(dateList(a));    
-        if expRunDate >= datenum("01-01-2018") && expRunDate < datenum("01-01-2019")
-            edtStart = "03-11-2018";
-            edtEnd = "11-04-2018"; 
-        elseif expRunDate >= datenum("01-01-2019") && expRunDate < datenum("01-01-2020")
-            edtStart = "03-10-2019";
-            edtEnd = "11-03-2019"; 
-        elseif expRunDate >= datenum("01-01-2020") && expRunDate < datenum("01-01-2021")
-            edtStart = "03-08-2020";
-            edtEnd = "11-01-2020"; 
-        elseif expRunDate >= datenum("01-01-2021") && expRunDate < datenum("01-01-2022")
-            edtStart = "03-14-2021";
-            edtEnd = "11-07-2021";
-        elseif expRunDate >= datenum("01-01-2022") && expRunDate < datenum("01-01-2023")
-            edtStart = "03-13-2022";
-            edtEnd = "11-06-2022";
-        elseif expRunDate >= datenum("01-01-2023") && expRunDate < datenum("01-01-2024")
-            edtStart = "03-12-2023";
-            edtEnd = "11-05-2023";
-        elseif expRunDate >= datenum("01-01-2024") && expRunDate < datenum("01-01-2025")
-            edtStart = "03-10-2024";
-            edtEnd = "11-03-2024";
-        elseif expRunDate >= datenum("01-01-2025") && expRunDate < datenum("01-01-2026")
-            edtStart = "03-10-2025";
-            edtEnd = "11-03-2025";
-        else
-            msgbox("WTF year is it?","WTF?");
-            pause;
-        end
-        if expRunDate >= datenum(edtStart) && expRunDate < datenum(edtEnd)
-            data.params.zt0(a) = 25;
-        else
-            data.params.zt0(a) = 24;
-        end    
-        
-        expFrames(a) = length(expmt.Centroid.data); 
-        
-        % Check that experiment was captured at 3 Hz
-        if expmt.parameters.target_rate ~= 3
-            disp('Frame rate assumptions are wrong! Experiment was NOT run at 3 Hz!');
-            break;
-        end
-        
-        % Establish total length of experiment to align, using experiment that
-        % ran longest relative to startTime (earliest starting experiment)
-        totLength = expFrames(a) + ceil((startList(a)-data.startTime)*3600*data.params.fr);
-        if totLength > maxLength
-            maxLength = totLength;
-        end
+    load(files(a));
 
-        % Read in survival data to determine # of ROIs and # of genotypes
-        survival = readtable(survivalList(a)); 
-        roi = 1:height(survival);        
-        geno = string(survival{roi,'Geno'});
-        uGeno = transpose(unique(geno));
+    % Automatically determining whether run on EDT (daylight savings) or EST (standard)
+    % dateList(a) assumed formatted like "MM-DD-YYYY" based on your prior datenum usage
+    expRunDT = datetime(dateList(a), 'InputFormat','MM-dd-uuuu');
+    yr = year(expRunDT);
 
-        genoList = [genoList, uGeno(~ismember(uGeno,genoList))]; %#ok<AGROW>
-        try
-            if ~ismember(survival{1,'Cohort'},cohortList)
-                cohortList = [cohortList,survival{1,'Cohort'}];
-            end
-        catch
-        end
+    % Compute US DST boundaries for that year (no yearly edits)
+    dstStartDT = secondSundayOfMarch(yr);
+    dstEndDT   = firstSundayOfNovember(yr);
 
-        % Count survivors, cadavers, NI and uninfected flies to initialize
-        % data structs in next section
-        for j=1:max(roi)
-            if survival{j,'Outcome'} == 1
-                count.Cadavers = count.Cadavers + 1;
-            elseif survival{j,'Status'} == 1
-                    if strcmp(survival{j,'Rx'},'Uninfected')
-                        count.Uninfected = count.Uninfected +1;
-                    else
-                        count.Alive = count.Alive + 1;
-                    end
-            else
-                count.NI = count.NI+1;
-            end
-        end
+    if expRunDT >= dstStartDT && expRunDT < dstEndDT
+        data.params.zt0(a) = 25;
+    else
+        data.params.zt0(a) = 24;
     end
 
-    genoList = genoList(2:length(genoList));
-    disp("Genotypes found: ");
-    disp(genoList);
+    expFrames(a) = length(expmt.Centroid.data);
+
+    % Check that experiment was captured at 3 Hz
+    if expmt.parameters.target_rate ~= 3
+        disp('Frame rate assumptions are wrong! Experiment was NOT run at 3 Hz!');
+        break;
+    end
+
+    % Establish total length of experiment to align, using experiment that
+    % ran longest relative to startTime (earliest starting experiment)
+    totLength = expFrames(a) + ceil((startList(a)-data.startTime)*3600*data.params.fr);
+    if totLength > maxLength
+        maxLength = totLength;
+    end
+
+    % Read in survival data to determine # of ROIs and # of genotypes
+    survival = readtable(survivalList(a));
+    roi = 1:height(survival);
+    geno = string(survival{roi,'Geno'});
+    uGeno = transpose(unique(geno));
+
+    genoList = [genoList, uGeno(~ismember(uGeno,genoList))]; %#ok<AGROW>
+    try
+        if ~ismember(survival{1,'Cohort'},cohortList)
+            cohortList = [cohortList,survival{1,'Cohort'}];
+        end
+    catch
+    end
+
+    % Count survivors, cadavers, NI and uninfected flies to initialize
+    % data structs in next section
+    for j=1:max(roi)
+        if survival{j,'Outcome'} == 1
+            count.Cadavers = count.Cadavers + 1;
+        elseif survival{j,'Status'} == 1
+            if strcmp(survival{j,'Rx'},'Uninfected')
+                count.Uninfected = count.Uninfected + 1;
+            else
+                count.Alive = count.Alive + 1;
+            end
+        else
+            count.NI = count.NI + 1;
+        end
+    end
+end
+
+genoList = genoList(2:length(genoList));
+disp("Genotypes found: ");
+disp(genoList);
+
+% ---------------- local helper functions ----------------
+function d = secondSundayOfMarch(y)
+    d0 = datetime(y,3,1);
+    offsetToSunday = mod(1 - weekday(d0), 7); % days from Mar 1 to first Sunday
+    firstSunday = d0 + days(offsetToSunday);
+    d = firstSunday + days(7);               % second Sunday
+end
+
+function d = firstSundayOfNovember(y)
+    d0 = datetime(y,11,1);
+    offsetToSunday = mod(1 - weekday(d0), 7);
+    d = d0 + days(offsetToSunday);
+end
     
     %% Make genoListSafe, a list of all genotypes that don't have any illegal characters for Windows files
     % This will be used for naming any output files

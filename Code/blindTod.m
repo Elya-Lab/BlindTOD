@@ -24,7 +24,7 @@ overwriteROICalls = 0; % 0 = only call tod for ROIs that have not been previousl
 analyzeAtEnd = 1;
 
 % Directory to look in when selecting data file
-baseDir = '/Users/brandonfricker/Documents/MATLAB/Elya Margo/Behavior Analysis'; %Set this to the basedirectory for YOUR computer.
+baseDir = 'C:\Users\bfric\Documents\MATLAB\blindTODtest'; %Set this to the basedirectory for YOUR computer.
 
 % Define subdirectories (OS-agnostic with fullfile)
 dataDir     = fullfile(baseDir, 'Behavior data');
@@ -87,7 +87,7 @@ disp(strcat("Total cadavers = ", num2str(totalCads)));
 %% Generate temporary scrambled .mat file
 % Generate .mat files that contain up to data for X cadavers (set with maxROIperFile)
 maxROIperFile = 128;
-randCadFiles = makeRandMat(randCadArray, convFiles, maxROIperFile, maxLen);
+randCadFiles = makeRandMat(randCadArray, convFiles, maxROIperFile, maxLen, analysisDir);
 
 %% Go through scrambled .mat files and call times of death
 manuallyCallTod(randCadFiles, localTandSurvival, totalCads, overwriteROICalls);
